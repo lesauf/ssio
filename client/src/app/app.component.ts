@@ -1,12 +1,14 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { io, Manager } from 'socket.io-client';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
+    selector: 'app-root',
+    imports: [RouterOutlet],
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
   @ViewChild('terminal', { static: true })
@@ -54,7 +56,7 @@ export class AppComponent implements OnInit {
     });
 
     this.socket.on('disconnect', (reason: string) => {
-      
+
       console.log('Socket disconnected', reason);
       // this.socket.removeAllListeners();
     });
@@ -84,7 +86,7 @@ export class AppComponent implements OnInit {
 
   connectTerminal() {
     console.log('should reconnect');
-  
+
     this.socket.connect();
   }
 }
