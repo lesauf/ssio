@@ -31,11 +31,11 @@
               "src/assets"
             ],
             "styles": [
-              "./node_modules/xterm/css/xterm.css",
+              "./node_modules/@xterm/xterm/css/xterm.css",
               "src/styles.scss"
             ],
             "scripts": [
-              "node_modules/xterm/lib/xterm.js"
+              "node_modules/@xterm/xterm/lib/xterm.js"
             ],
             "browser": "src/main.ts"
           },

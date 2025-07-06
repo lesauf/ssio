@@ -1,8 +1,8 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, OnDestroy, ViewChild, HostListener } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { Terminal } from 'xterm';
-import { FitAddon } from 'xterm-addon-fit';
-import { io, Manager } from 'socket.io-client';
+import { Terminal } from '@xterm/xterm';
+import { FitAddon } from '@xterm/addon-fit';
+import { io } from 'socket.io-client';
 
 @Component({
     selector: 'app-root',
@@ -10,7 +10,7 @@ import { io, Manager } from 'socket.io-client';
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   @ViewChild('terminal', { static: true })
   container: ElementRef<HTMLDivElement>;
 
@@ -18,10 +18,11 @@ export class AppComponent implements OnInit {
     cursorBlink: true,
     fontSize: 16,
     theme: {
-      selection: "#ffffff",
+      selectionForeground: "#ffffff",
     },
   });
 
+  fitAddon: FitAddon = new FitAddon();
   socket: any;
   terminalCols: number;
   terminalRows: number;
@@ -29,6 +30,7 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.socket = io('http://localhost:3000');
 
+    this.terminal.loadAddon(this.fitAddon);
     this.terminal.open(this.container.nativeElement);
 
     this.calculateTerminalSize();
@@ -73,15 +75,40 @@ export class AppComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    // Dispose of the FitAddon
+    this.fitAddon.dispose();
+
+    // Disconnect the socket
+    if (this.socket) {
+      this.socket.disconnect();
+    }
+
+    // Dispose of the terminal
+    this.terminal.dispose();
+  }
+
   /**
-   * @todo subscribe to windows size changes and recall this
-   * @see https://github.com/xtermjs/xterm.js/issues/1359#issuecomment-725099398
+   * Calculate terminal size and fit it to the container
    */
   calculateTerminalSize() {
-    let height = this.container.nativeElement.offsetHeight / 18;
-    let width = this.container.nativeElement.offsetWidth / 9;
-    this.terminalRows = parseInt(height.toString(), 10); // height/8;
-    this.terminalCols = parseInt(width.toString(), 10);  // width/8;
+    // Use the FitAddon to automatically calculate the best size
+    this.fitAddon.fit();
+
+    // Update the terminal dimensions
+    this.terminalCols = this.terminal.cols;
+    this.terminalRows = this.terminal.rows;
+
+    // Emit the resize event to the server
+    this.socket?.emit('resize', this.terminalCols, this.terminalRows);
+  }
+
+  /**
+   * Listen for window resize events and recalculate terminal size
+   */
+  @HostListener('window:resize', ['$event'])
+  onResize(event: Event) {
+    this.calculateTerminalSize();
   }
 
   connectTerminal() {
