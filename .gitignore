@@ -29,6 +29,8 @@
 /client/libpeerconnection.log
 /client/testem.log
 /client/typings
+/client/package-lock.json
+/server/package-lock.json
 
 # System files
 .DS_Store
